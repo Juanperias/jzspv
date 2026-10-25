@@ -31,6 +31,11 @@ pub fn main(init: std.process.Init) !void {
 
     try output.flush();
 
+    if (!header.is_valid()) {
+        std.debug.print("Invalid SPIR-V File!", .{});
+        std.process.exit(1);
+    }
+
     var op: spirv.SpirVOp = undefined;
 
     var offset: u64 = @sizeOf(spirv.SpirVHeader);
