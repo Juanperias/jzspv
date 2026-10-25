@@ -12,15 +12,16 @@ pub fn main(init: std.process.Init) !void {
     const file = try std.Io.Dir.cwd().openFile(init.io, "../shader.frag.spv", .{});
     defer file.close(init.io);
 
-    var header: spirv.SpirVHeader = undefined;
+    const len = try file.length(init.io);
 
-    var n = try file.readPositionalAll(init.io, std.mem.asBytes(&header), 0);
-
-    if (n == 0) {
+    if ((len & 3) != 0) {
         std.debug.print("Invalid SPIR-V File!", .{});
-
         std.process.exit(1);
     }
+
+    var header: spirv.SpirVHeader = undefined;
+
+    _ = try file.readPositionalAll(init.io, std.mem.asBytes(&header), 0);
 
     try output.print("; SPIR-V\n", .{});
     try output.print("; Version: {}.{}\n", .{ header.major(), header.minor() });
@@ -34,16 +35,8 @@ pub fn main(init: std.process.Init) !void {
 
     var offset: u64 = @sizeOf(spirv.SpirVHeader);
 
-    const len = try file.length(init.io);
-
     while (offset < len) {
-        n = try file.readPositionalAll(init.io, std.mem.asBytes(&op), offset);
-
-        if (n == 0) {
-            std.debug.print("Invalid SPIR-V File!", .{});
-
-            std.process.exit(1);
-        }
+        _ = try file.readPositionalAll(init.io, std.mem.asBytes(&op), offset);
 
         try output.print("{}\n", .{op.opcode()});
 
