@@ -36,16 +36,31 @@ pub fn main(init: std.process.Init) !void {
         std.process.exit(1);
     }
 
-    var op: spirv.SpirVOp = undefined;
+    var raw_op: spirv.RawSpirVOp = undefined;
 
     var offset: u64 = @sizeOf(spirv.SpirVHeader);
 
+    const allocator = init.arena.allocator();
+
     while (offset < len) {
-        _ = try file.readPositionalAll(init.io, std.mem.asBytes(&op), offset);
+        _ = try file.readPositionalAll(init.io, std.mem.asBytes(&raw_op), offset);
 
-        try output.print("{}\n", .{op.opcode()});
+        var op = try spirv.SpirVOp.new(
+            raw_op,
+            allocator,
+        );
 
-        offset += op.wc() * 4;
+        defer op.deinit(allocator);
+
+        try op.feed(init.io, file, offset + @sizeOf(spirv.RawSpirVOp));
+
+        try output.print("{} ", .{op.raw.opcode()});
+
+        try op.printOperands(output);
+
+        try output.writeByte('\n');
+
+        offset += op.raw.wc() * 4;
     }
 
     try output.flush();

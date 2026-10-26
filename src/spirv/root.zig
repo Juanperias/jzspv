@@ -1,13 +1,50 @@
 // https://github.com/KhronosGroup/SPIRV-Headers/blob/main/include/spirv/spir-v.xml
+const std = @import("std");
 
-pub const SpirVOp = extern struct {
+pub const SpirVOp = struct {
+    raw: RawSpirVOp,
+    operands: std.ArrayList(u32),
+
+    pub fn new(raw: RawSpirVOp, allocator: std.mem.Allocator) !SpirVOp {
+        var l = try std.ArrayList(u32).initCapacity(allocator, @as(usize, raw.wc() - 1));
+
+        try l.resize(allocator, raw.wc() - 1);
+
+        return .{ .raw = raw, .operands = l };
+    }
+
+    pub fn feed(self: *SpirVOp, io: std.Io, file: std.Io.File, offset: usize) !void {
+        if (self.raw.wc() == 1)
+            return;
+
+        _ = try file.readPositionalAll(io, std.mem.sliceAsBytes(self.operands.items), offset);
+    }
+
+    pub fn printOperands(self: *SpirVOp, writer: *std.Io.Writer) !void {
+        switch (self.raw.opcode()) {
+            .OpCapability => {
+                for (self.operands.items) |item| {
+                    const cap: SpvCapability = @fromBackingInt(item);
+                    try writer.print("{} ", .{cap});
+                }
+            },
+            else => {},
+        }
+    }
+
+    pub fn deinit(self: *SpirVOp, allocator: std.mem.Allocator) void {
+        self.operands.deinit(allocator);
+    }
+};
+
+pub const RawSpirVOp = extern struct {
     op: u32,
 
-    pub fn wc(self: *SpirVOp) u16 {
+    pub fn wc(self: *const RawSpirVOp) u16 {
         return @intCast((self.op >> 16) & 0xffff);
     }
 
-    pub fn opcode(self: *SpirVOp) SpvOpCode {
+    pub fn opcode(self: *const RawSpirVOp) SpvOpCode {
         return @fromBackingInt(@intCast(self.op & 0xffff));
     }
 };
@@ -19,11 +56,11 @@ pub const SpirVHeader = extern struct {
     bound: u32,
     _reserved: u32,
 
-    pub fn is_valid(self: *SpirVHeader) bool {
+    pub fn is_valid(self: *const SpirVHeader) bool {
         return self.magic_number == 0x07230203;
     }
 
-    pub fn tool_id_string(self: *SpirVHeader) []const u8 {
+    pub fn tool_id_string(self: *const SpirVHeader) []const u8 {
         return switch (self.tool_id()) {
             0 => "Khronos",
             1 => "LunarG",
@@ -81,19 +118,19 @@ pub const SpirVHeader = extern struct {
         };
     }
 
-    pub fn tool_id(self: *SpirVHeader) u16 {
+    pub fn tool_id(self: *const SpirVHeader) u16 {
         return @intCast((self.gen_magic_number >> 16) & 0xffff);
     }
 
-    pub fn tool_version(self: *SpirVHeader) u16 {
+    pub fn tool_version(self: *const SpirVHeader) u16 {
         return @intCast(self.gen_magic_number & 0xffff);
     }
 
-    pub fn major(self: *SpirVHeader) u8 {
+    pub fn major(self: *const SpirVHeader) u8 {
         return @intCast((self.version >> 16) & 0xff);
     }
 
-    pub fn minor(self: *SpirVHeader) u8 {
+    pub fn minor(self: *const SpirVHeader) u8 {
         return @intCast((self.version >> 8) & 0xff);
     }
 };
@@ -431,4 +468,89 @@ pub const SpvOpCode = enum(u16) {
     OpSubgroupImageBlockWriteINTEL = 5578,
     OpDecorateStringGOOGLE = 5632,
     OpMemberDecorateStringGOOGLE = 5633,
+};
+
+const SpvCapability = enum(u32) {
+    Matrix = 0,
+    Shader = 1,
+    Geometry = 2,
+    Tessellation = 3,
+    Addresses = 4,
+    Linkage = 5,
+    Kernel = 6,
+    Vector16 = 7,
+    Float16Buffer = 8,
+    Float16 = 9,
+    Float64 = 10,
+    Int64 = 11,
+    Int64Atomics = 12,
+    ImageBasic = 13,
+    ImageReadWrite = 14,
+    ImageMipmap = 15,
+    Pipes = 17,
+    Groups = 18,
+    DeviceEnqueue = 19,
+    LiteralSampler = 20,
+    AtomicStorage = 21,
+    Int16 = 22,
+    TessellationPointSize = 23,
+    GeometryPointSize = 24,
+    ImageGatherExtended = 25,
+    StorageImageMultisample = 27,
+    UniformBufferArrayDynamicIndexing = 28,
+    SampledImageArrayDynamicIndexing = 29,
+    StorageBufferArrayDynamicIndexing = 30,
+    StorageImageArrayDynamicIndexing = 31,
+    ClipDistance = 32,
+    CullDistance = 33,
+    ImageCubeArray = 34,
+    SampleRateShading = 35,
+    ImageRect = 36,
+    SampledRect = 37,
+    GenericPointer = 38,
+    Int8 = 39,
+    InputAttachment = 40,
+    SparseResidency = 41,
+    MinLod = 42,
+    Sampled1D = 43,
+    Image1D = 44,
+    SampledCubeArray = 45,
+    SampledBuffer = 46,
+    ImageBuffer = 47,
+    ImageMSArray = 48,
+    StorageImageExtendedFormats = 49,
+    ImageQuery = 50,
+    DerivativeControl = 51,
+    InterpolationFunction = 52,
+    TransformFeedback = 53,
+    GeometryStreams = 54,
+    StorageImageReadWithoutFormat = 55,
+    StorageImageWriteWithoutFormat = 56,
+    MultiViewport = 57,
+    SubgroupBallotKHR = 4423,
+    DrawParameters = 4427,
+    SubgroupVoteKHR = 4431,
+    StorageBuffer16BitAccess = 4433, // or CapabilityStorageUniformBufferBlock16
+    StorageUniform16 = 4434, // or CapabilityUniformAndStorageBuffer16BitAccess
+    StoragePushConstant16 = 4435,
+    StorageInputOutput16 = 4436,
+    DeviceGroup = 4437,
+    MultiView = 4439,
+    VariablePointersStorageBuffer = 4441,
+    VariablePointers = 4442,
+    AtomicStorageOps = 4445,
+    SampleMaskPostDepthCoverage = 4447,
+    ImageGatherBiasLodAMD = 5009,
+    FragmentMaskAMD = 5010,
+    StencilExportEXT = 5013,
+    ImageReadWriteLodAMD = 5015,
+    SampleMaskOverrideCoverageNV = 5249,
+    GeometryShaderPassthroughNV = 5251,
+    ShaderViewportIndexLayerEXT = 5254, // or  CapabilityShaderViewportIndexLayerNV
+    ShaderViewportMaskNV = 5255,
+    ShaderStereoViewNV = 5259,
+    PerViewAttributesNV = 5260,
+    SubgroupShuffleINTEL = 5568,
+    SubgroupBufferBlockIOINTEL = 5569,
+    SubgroupImageBlockIOINTEL = 5570,
 };
