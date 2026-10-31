@@ -333,6 +333,20 @@ pub const SpvOpCode = enum(u16) {
     OpMemberDecorateStringGOOGLE = 5633,
 };
 
+pub const SpvAddressingModel = enum(u32) {
+    Logical = 0,
+    Physical32 = 1,
+    Physical64 = 2,
+    PhysicalStorageBuffer = 5348, // WHAT??? Well thats what SPIR-V says
+};
+
+pub const SpvMemoryModel = enum(u32) {
+    Simple = 0, // NOTE: Spir-V spec says this is deprecated
+    Glsl450 = 1,
+    OpenCl = 2,
+    Vulkan = 3,
+};
+
 pub const SpvCapability = enum(u32) {
     Matrix = 0,
     Shader = 1,

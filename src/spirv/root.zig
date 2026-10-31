@@ -2,6 +2,8 @@
 const std = @import("std");
 const spv = @import("enums.zig");
 
+pub const SpirVError = error{ InvalidWC, WriteFailed };
+
 pub const SpirVOp = struct {
     raw: RawSpirVOp,
     operands: std.ArrayList(u32),
@@ -21,7 +23,7 @@ pub const SpirVOp = struct {
         _ = try file.readPositionalAll(io, std.mem.sliceAsBytes(self.operands.items), offset);
     }
 
-    pub fn printOperands(self: *SpirVOp, writer: *std.Io.Writer) !void {
+    pub fn printOperands(self: *SpirVOp, writer: *std.Io.Writer) SpirVError!void {
         switch (self.raw.opcode()) {
             .OpCapability => {
                 for (self.operands.items) |item| {
@@ -30,9 +32,18 @@ pub const SpirVOp = struct {
                 }
             },
             .OpMemoryModel => {
-                //if (self.raw.wc < 3) {
-                //
-                // }
+                if (self.raw.wc() != 3) {
+                    std.debug.print("Word Count Should be 3, but it is {}", .{self.raw.wc()});
+                    return SpirVError.InvalidWC;
+                }
+
+                const addr_model_word = self.operands.items[0];
+                const memory_model_word = self.operands.items[1];
+
+                const addr_model: spv.SpvAddressingModel = @fromBackingInt(addr_model_word);
+                const memory_model: spv.SpvMemoryModel = @fromBackingInt(memory_model_word);
+
+                try writer.print("{} {}", .{ addr_model, memory_model });
             },
             else => {},
         }
