@@ -45,6 +45,11 @@ pub const SpirVOp = struct {
 
                 try writer.print("{} {}", .{ addr_model, memory_model });
             },
+            .OpExtInstImport => {
+                //  const id = self.operands.items[0];
+
+                try writer.print("{s}", .{std.mem.sliceAsBytes(self.operands.items[1 .. self.raw.wc() - 2])});
+            },
             else => {},
         }
     }
