@@ -8,6 +8,8 @@ pub const Operands = union(enum) {
     capability: spv.SpvCapability,
     memory_model: struct { addr: spv.SpvAddressingModel, mem: spv.SpvMemoryModel },
     ext_inst_import: []const u8,
+    source: struct { source_lang: spv.SpvSourceLanguage, version: u32 },
+    source_extension: []const u8,
     _unk: u32,
 };
 
@@ -76,6 +78,31 @@ pub const SpirVOp = struct {
                     .result_id = id,
                     .operands = Operands{
                         .ext_inst_import = std.mem.sliceAsBytes(self.operands.items[1 .. self.raw.wc() - 2]),
+                    },
+                };
+            },
+            .OpSource => {
+                const source_language: spv.SpvSourceLanguage = @fromBackingInt(self.operands.items[0]);
+                const version = self.operands.items[1];
+                // TODO(Juanperias): Optional Id file Optional literal source
+
+                return .{
+                    .opcode = self.raw.opcode(),
+                    .result_id = null,
+                    .operands = Operands{
+                        .source = .{
+                            .source_lang = source_language,
+                            .version = version,
+                        },
+                    },
+                };
+            },
+            .OpSourceExtension => {
+                return .{
+                    .opcode = self.raw.opcode(),
+                    .result_id = null,
+                    .operands = Operands{
+                        .ext_inst_import = std.mem.sliceAsBytes(self.operands.items[0 .. self.raw.wc() - 1]),
                     },
                 };
             },

@@ -333,6 +333,25 @@ pub const SpvOpCode = enum(u16) {
     OpMemberDecorateStringGOOGLE = 5633,
 };
 
+pub const SpvSourceLanguage = enum(u32) {
+    Unknown = 0,
+    Essl = 1,
+    Glsl = 2,
+    OpenClC = 3,
+    OpenClCPP = 4,
+    Hlsl = 5,
+    CppForOpenCl = 6,
+    Sycl = 7,
+    HeroC = 8,
+    Nzsl = 9,
+    Wgsl = 10,
+    Slang = 11,
+    Zig = 12,
+    Rust = 13,
+    Pred = 14,
+    Apilajai = 15,
+};
+
 pub const SpvAddressingModel = enum(u32) {
     Logical = 0,
     Physical32 = 1,
