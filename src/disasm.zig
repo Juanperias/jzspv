@@ -54,11 +54,9 @@ pub fn main(init: std.process.Init) !void {
 
         try op.feed(init.io, file, offset + @sizeOf(spirv.RawSpirVOp));
 
-        try output.print("{} ", .{op.raw.opcode()});
+        const ins = try op.decode();
 
-        try op.printOperands(output);
-
-        try output.writeByte('\n');
+        try output.print("{any}\n", .{ins});
 
         offset += op.raw.wc() * 4;
     }

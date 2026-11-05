@@ -4,6 +4,19 @@ const spv = @import("enums.zig");
 
 pub const SpirVError = error{ InvalidWC, WriteFailed };
 
+pub const Operands = union(enum) {
+    capability: spv.SpvCapability,
+    memory_model: struct { addr: spv.SpvAddressingModel, mem: spv.SpvMemoryModel },
+    ext_inst_import: []const u8,
+    _unk: u32,
+};
+
+pub const SpirVIns = struct {
+    opcode: spv.SpvOpCode,
+    operands: Operands,
+    result_id: ?usize,
+};
+
 pub const SpirVOp = struct {
     raw: RawSpirVOp,
     operands: std.ArrayList(u32),
@@ -23,13 +36,14 @@ pub const SpirVOp = struct {
         _ = try file.readPositionalAll(io, std.mem.sliceAsBytes(self.operands.items), offset);
     }
 
-    pub fn printOperands(self: *SpirVOp, writer: *std.Io.Writer) SpirVError!void {
+    pub fn decode(self: *SpirVOp) SpirVError!SpirVIns {
         switch (self.raw.opcode()) {
             .OpCapability => {
-                for (self.operands.items) |item| {
-                    const cap: spv.SpvCapability = @fromBackingInt(item);
-                    try writer.print("{} ", .{cap});
-                }
+                const capability: spv.SpvCapability = @fromBackingInt(self.operands.items[0]);
+
+                return .{ .opcode = self.raw.opcode(), .result_id = null, .operands = Operands{
+                    .capability = capability,
+                } };
             },
             .OpMemoryModel => {
                 if (self.raw.wc() != 3) {
@@ -43,14 +57,37 @@ pub const SpirVOp = struct {
                 const addr_model: spv.SpvAddressingModel = @fromBackingInt(addr_model_word);
                 const memory_model: spv.SpvMemoryModel = @fromBackingInt(memory_model_word);
 
-                try writer.print("{} {}", .{ addr_model, memory_model });
+                return .{
+                    .opcode = self.raw.opcode(),
+                    .result_id = null,
+                    .operands = Operands{
+                        .memory_model = .{
+                            .addr = addr_model,
+                            .mem = memory_model,
+                        },
+                    },
+                };
             },
             .OpExtInstImport => {
-                //  const id = self.operands.items[0];
+                const id = self.operands.items[0];
 
-                try writer.print("{s}", .{std.mem.sliceAsBytes(self.operands.items[1 .. self.raw.wc() - 2])});
+                return .{
+                    .opcode = self.raw.opcode(),
+                    .result_id = id,
+                    .operands = Operands{
+                        .ext_inst_import = std.mem.sliceAsBytes(self.operands.items[1 .. self.raw.wc() - 2]),
+                    },
+                };
             },
-            else => {},
+            else => {
+                return .{
+                    .opcode = self.raw.opcode(),
+                    .result_id = null,
+                    .operands = Operands{
+                        ._unk = 0,
+                    },
+                };
+            },
         }
     }
 
