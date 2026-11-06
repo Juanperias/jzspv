@@ -10,6 +10,10 @@ pub const Operands = union(enum) {
     ext_inst_import: []const u8,
     source: struct { source_lang: spv.SpvSourceLanguage, version: u32 },
     source_extension: []const u8,
+    name: struct {
+        id_target: u32,
+        name: []const u8,
+    },
     _unk: u32,
 };
 
@@ -103,6 +107,18 @@ pub const SpirVOp = struct {
                     .result_id = null,
                     .operands = Operands{
                         .ext_inst_import = std.mem.sliceAsBytes(self.operands.items[0 .. self.raw.wc() - 1]),
+                    },
+                };
+            },
+            .OpName => {
+                return .{
+                    .opcode = self.raw.opcode(),
+                    .result_id = null,
+                    .operands = Operands{
+                        .name = .{
+                            .id_target = self.operands.items[0],
+                            .name = std.mem.sliceAsBytes(self.operands.items[1 .. self.raw.wc() - 1]),
+                        },
                     },
                 };
             },
@@ -220,3 +236,26 @@ pub const SpirVHeader = extern struct {
         return @intCast((self.version >> 8) & 0xff);
     }
 };
+
+// this function is.... useless lol
+pub fn detect_spv_string(operands: []const u32, offset: usize) struct {
+    start: usize,
+    end: usize,
+} {
+    var end = offset;
+
+    for (operands[offset..]) |operand| {
+        const m: []const u8 = std.mem.asBytes(&operand);
+
+        if (m[0] == 0 or m[1] == 0 or m[2] == 0 or m[3] == 0) {
+            break;
+        }
+
+        end += 1; // THIS IS WORD COUNT NOT BYTES
+    }
+
+    return .{
+        .start = offset,
+        .end = end,
+    };
+}
