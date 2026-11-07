@@ -14,6 +14,11 @@ pub const Operands = union(enum) {
         id_target: u32,
         name: []const u8,
     },
+    decoration: struct {
+        id_target: u32,
+        decoration: spv.SpvDecoration,
+        extra_operand: spv.DecorationExtraOperand,
+    },
     _unk: u32,
 };
 
@@ -118,6 +123,42 @@ pub const SpirVOp = struct {
                         .name = .{
                             .id_target = self.operands.items[0],
                             .name = std.mem.sliceAsBytes(self.operands.items[1 .. self.raw.wc() - 1]),
+                        },
+                    },
+                };
+            },
+            .OpDecorate => {
+                // NOTE: This behavior is used in other op so this should be in a function or something like that
+
+                const decoration: spv.SpvDecoration = @fromBackingInt(self.operands.items[1]);
+                var extra_op: spv.DecorationExtraOperand = undefined;
+
+                switch (decoration) {
+                    .BuiltIn => {
+                        extra_op = spv.DecorationExtraOperand{
+                            .build_in = @fromBackingInt(self.operands.items[2]),
+                        };
+                    },
+                    .SpecId, .ArrayStride, .MatrixStride, .UniformId, .Stream, .Location, .Component, .Index, .Binding, .DescriptorSet, .Offset, .XfbBuffer, .XfbStride => {
+                        extra_op = spv.DecorationExtraOperand{
+                            .literal = self.operands.items[2],
+                        };
+                    },
+                    else => {
+                        extra_op = spv.DecorationExtraOperand{
+                            .none = {},
+                        };
+                    },
+                }
+
+                return .{
+                    .opcode = self.raw.opcode(),
+                    .result_id = null,
+                    .operands = Operands{
+                        .decoration = .{
+                            .id_target = self.operands.items[0],
+                            .decoration = decoration,
+                            .extra_operand = extra_op,
                         },
                     },
                 };
