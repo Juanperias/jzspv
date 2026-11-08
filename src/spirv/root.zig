@@ -112,7 +112,7 @@ pub const SpirVOp = struct {
                     .opcode = self.raw.opcode(),
                     .result_id = null,
                     .operands = Operands{
-                        .ext_inst_import = std.mem.sliceAsBytes(self.operands.items[0 .. self.raw.wc() - 1]),
+                        .source_extension = std.mem.sliceAsBytes(self.operands.items[0 .. self.raw.wc() - 1]),
                     },
                 };
             },

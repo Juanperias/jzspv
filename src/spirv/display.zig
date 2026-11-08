@@ -11,6 +11,9 @@ pub const DisplayCtx = struct {
         };
     }
 
+    // TODO!
+    // pub fn feed() {}
+
     pub fn print(self: *DisplayCtx, ins: spirv.SpirVIns, writer: *std.Io.Writer) !void {
         _ = self;
         switch (ins.operands) {
@@ -20,7 +23,33 @@ pub const DisplayCtx = struct {
             .memory_model => |mem| {
                 try writer.print("OpMemoryModel {s} {s}\n", .{ @tagName(mem.addr), @tagName(mem.mem) });
             },
-            // ....and then!
+            .ext_inst_import => |ins_import| {
+                try writer.print("%{?} = OpExtInstImport \"{s}\"\n", .{ ins.result_id, ins_import });
+            },
+            .source => |s| {
+                try writer.print("OpSource {s} {}\n", .{ @tagName(s.source_lang), s.version });
+            },
+            .source_extension => |ext| {
+                try writer.print("OpSourceExtension \"{s}\"\n", .{ext});
+            },
+            .name => |name| {
+                try writer.print("OpName %{} \"{s}\"\n", .{ name.id_target, name.name });
+            },
+            .decoration => |dec| {
+                try writer.print("OpDecorate %{} {s} ", .{ dec.id_target, @tagName(dec.decoration) });
+
+                switch (dec.extra_operand) {
+                    .literal => |lit| {
+                        try writer.print("{}", .{lit});
+                    },
+                    .build_in => |b| {
+                        try writer.print("{s}", .{@tagName(b)});
+                    },
+                    else => {},
+                }
+
+                try writer.print("\n", .{});
+            },
             else => {},
         }
     }
