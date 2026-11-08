@@ -82,12 +82,13 @@ pub const SpirVOp = struct {
             },
             .OpExtInstImport => {
                 const id = self.operands.items[0];
+                const raw = std.mem.sliceAsBytes(self.operands.items[1 .. self.raw.wc() - 2]);
 
                 return .{
                     .opcode = self.raw.opcode(),
                     .result_id = id,
                     .operands = Operands{
-                        .ext_inst_import = std.mem.sliceAsBytes(self.operands.items[1 .. self.raw.wc() - 2]),
+                        .ext_inst_import = raw[0..detect_spv_string_end(raw)],
                     },
                 };
             },
@@ -108,22 +109,26 @@ pub const SpirVOp = struct {
                 };
             },
             .OpSourceExtension => {
+                const raw = std.mem.sliceAsBytes(self.operands.items[0 .. self.raw.wc() - 1]);
+
                 return .{
                     .opcode = self.raw.opcode(),
                     .result_id = null,
                     .operands = Operands{
-                        .source_extension = std.mem.sliceAsBytes(self.operands.items[0 .. self.raw.wc() - 1]),
+                        .source_extension = raw[0..detect_spv_string_end(raw)],
                     },
                 };
             },
             .OpName => {
+                const raw = std.mem.sliceAsBytes(self.operands.items[1 .. self.raw.wc() - 1]);
+
                 return .{
                     .opcode = self.raw.opcode(),
                     .result_id = null,
                     .operands = Operands{
                         .name = .{
                             .id_target = self.operands.items[0],
-                            .name = std.mem.sliceAsBytes(self.operands.items[1 .. self.raw.wc() - 1]),
+                            .name = raw[0..detect_spv_string_end(raw)],
                         },
                     },
                 };
@@ -279,25 +284,17 @@ pub const SpirVHeader = extern struct {
     }
 };
 
-// this function is.... useless lol
-pub fn detect_spv_string(operands: []const u32, offset: usize) struct {
-    start: usize,
-    end: usize,
-} {
-    var end = offset;
+// TODO: there must be a function that does this
+pub fn detect_spv_string_end(spv_str: []const u8) usize {
+    var end: usize = 0;
 
-    for (operands[offset..]) |operand| {
-        const m: []const u8 = std.mem.asBytes(&operand);
-
-        if (m[0] == 0 or m[1] == 0 or m[2] == 0 or m[3] == 0) {
+    for (spv_str) |m| {
+        if (m == 0) {
             break;
         }
 
-        end += 1; // THIS IS WORD COUNT NOT BYTES
+        end += 1;
     }
 
-    return .{
-        .start = offset,
-        .end = end,
-    };
+    return end;
 }

@@ -59,7 +59,6 @@ pub fn main(init: std.process.Init) !void {
         const ins = try op.decode();
 
         try display_ctx.print(ins, output);
-
         offset += op.raw.wc() * 4;
     }
 
