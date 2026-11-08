@@ -1,6 +1,7 @@
 // https://github.com/KhronosGroup/SPIRV-Headers/blob/main/include/spirv/spir-v.xml
 const std = @import("std");
-const spv = @import("enums.zig");
+pub const spv = @import("enums.zig");
+pub const display = @import("display.zig");
 
 pub const SpirVError = error{ InvalidWC, WriteFailed };
 

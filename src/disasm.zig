@@ -41,6 +41,8 @@ pub fn main(init: std.process.Init) !void {
     var offset: u64 = @sizeOf(spirv.SpirVHeader);
 
     const allocator = init.arena.allocator();
+    var display_ctx = spirv.display.DisplayCtx.init(allocator);
+    defer display_ctx.deinit();
 
     while (offset < len) {
         _ = try file.readPositionalAll(init.io, std.mem.asBytes(&raw_op), offset);
@@ -56,7 +58,7 @@ pub fn main(init: std.process.Init) !void {
 
         const ins = try op.decode();
 
-        try output.print("{any}\n", .{ins});
+        try display_ctx.print(ins, output);
 
         offset += op.raw.wc() * 4;
     }
