@@ -16,7 +16,7 @@ pub const DisplayCtx = struct {
 
     pub fn print(self: *DisplayCtx, ins: spirv.SpirVIns, writer: *std.Io.Writer) !void {
         _ = self;
-        switch (ins.operands) {
+        switch (ins) {
             .capability => |cap| {
                 try writer.print("OpCapability {s}\n", .{@tagName(cap)});
             },
@@ -24,7 +24,7 @@ pub const DisplayCtx = struct {
                 try writer.print("OpMemoryModel {s} {s}\n", .{ @tagName(mem.addr), @tagName(mem.mem) });
             },
             .ext_inst_import => |ins_import| {
-                try writer.print("%{?} = OpExtInstImport \"{s}\"\n", .{ ins.result_id, ins_import });
+                try writer.print("%{} = OpExtInstImport \"{s}\"\n", .{ ins_import.result_id, ins_import.name });
             },
             .source => |s| {
                 try writer.print("OpSource {s} {}\n", .{ @tagName(s.source_lang), s.version });

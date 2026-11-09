@@ -5,10 +5,13 @@ pub const display = @import("display.zig");
 
 pub const SpirVError = error{ InvalidWC, WriteFailed };
 
-pub const Operands = union(enum) {
+pub const SpirVIns = union(enum) {
     capability: spv.SpvCapability,
     memory_model: struct { addr: spv.SpvAddressingModel, mem: spv.SpvMemoryModel },
-    ext_inst_import: []const u8,
+    ext_inst_import: struct {
+        result_id: u32,
+        name: []const u8,
+    },
     source: struct { source_lang: spv.SpvSourceLanguage, version: u32 },
     source_extension: []const u8,
     name: struct {
@@ -20,13 +23,7 @@ pub const Operands = union(enum) {
         decoration: spv.SpvDecoration,
         extra_operand: spv.DecorationExtraOperand,
     },
-    _unk: u32,
-};
-
-pub const SpirVIns = struct {
-    opcode: spv.SpvOpCode,
-    operands: Operands,
-    result_id: ?usize,
+    _unk: void,
 };
 
 pub const SpirVOp = struct {
@@ -53,9 +50,9 @@ pub const SpirVOp = struct {
             .OpCapability => {
                 const capability: spv.SpvCapability = @fromBackingInt(self.operands.items[0]);
 
-                return .{ .opcode = self.raw.opcode(), .result_id = null, .operands = Operands{
+                return .{
                     .capability = capability,
-                } };
+                };
             },
             .OpMemoryModel => {
                 if (self.raw.wc() != 3) {
@@ -70,13 +67,9 @@ pub const SpirVOp = struct {
                 const memory_model: spv.SpvMemoryModel = @fromBackingInt(memory_model_word);
 
                 return .{
-                    .opcode = self.raw.opcode(),
-                    .result_id = null,
-                    .operands = Operands{
-                        .memory_model = .{
-                            .addr = addr_model,
-                            .mem = memory_model,
-                        },
+                    .memory_model = .{
+                        .addr = addr_model,
+                        .mem = memory_model,
                     },
                 };
             },
@@ -85,26 +78,20 @@ pub const SpirVOp = struct {
                 const raw = std.mem.sliceAsBytes(self.operands.items[1 .. self.raw.wc() - 2]);
 
                 return .{
-                    .opcode = self.raw.opcode(),
-                    .result_id = id,
-                    .operands = Operands{
-                        .ext_inst_import = raw[0..detect_spv_string_end(raw)],
+                    .ext_inst_import = .{
+                        .result_id = id,
+                        .name = raw[0..detect_spv_string_end(raw)],
                     },
                 };
             },
             .OpSource => {
                 const source_language: spv.SpvSourceLanguage = @fromBackingInt(self.operands.items[0]);
                 const version = self.operands.items[1];
-                // TODO(Juanperias): Optional Id file Optional literal source
 
                 return .{
-                    .opcode = self.raw.opcode(),
-                    .result_id = null,
-                    .operands = Operands{
-                        .source = .{
-                            .source_lang = source_language,
-                            .version = version,
-                        },
+                    .source = .{
+                        .source_lang = source_language,
+                        .version = version,
                     },
                 };
             },
@@ -112,25 +99,14 @@ pub const SpirVOp = struct {
                 const raw = std.mem.sliceAsBytes(self.operands.items[0 .. self.raw.wc() - 1]);
 
                 return .{
-                    .opcode = self.raw.opcode(),
-                    .result_id = null,
-                    .operands = Operands{
-                        .source_extension = raw[0..detect_spv_string_end(raw)],
-                    },
+                    .source_extension = raw[0..detect_spv_string_end(raw)],
                 };
             },
             .OpName => {
                 const raw = std.mem.sliceAsBytes(self.operands.items[1 .. self.raw.wc() - 1]);
 
                 return .{
-                    .opcode = self.raw.opcode(),
-                    .result_id = null,
-                    .operands = Operands{
-                        .name = .{
-                            .id_target = self.operands.items[0],
-                            .name = raw[0..detect_spv_string_end(raw)],
-                        },
-                    },
+                    .name = .{ .id_target = self.operands.items[0], .name = raw[0..detect_spv_string_end(raw)] },
                 };
             },
             .OpDecorate => {
@@ -158,24 +134,16 @@ pub const SpirVOp = struct {
                 }
 
                 return .{
-                    .opcode = self.raw.opcode(),
-                    .result_id = null,
-                    .operands = Operands{
-                        .decoration = .{
-                            .id_target = self.operands.items[0],
-                            .decoration = decoration,
-                            .extra_operand = extra_op,
-                        },
+                    .decoration = .{
+                        .id_target = self.operands.items[0],
+                        .decoration = decoration,
+                        .extra_operand = extra_op,
                     },
                 };
             },
             else => {
                 return .{
-                    .opcode = self.raw.opcode(),
-                    .result_id = null,
-                    .operands = Operands{
-                        ._unk = 0,
-                    },
+                    ._unk = {},
                 };
             },
         }
