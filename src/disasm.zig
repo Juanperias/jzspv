@@ -41,6 +41,7 @@ pub fn main(init: std.process.Init) !void {
     var offset: u64 = @sizeOf(spirv.SpirVHeader);
 
     const allocator = init.arena.allocator();
+
     var display_ctx = spirv.display.DisplayCtx.init(allocator);
     defer display_ctx.deinit();
 

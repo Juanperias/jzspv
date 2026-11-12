@@ -23,6 +23,10 @@ pub const SpirVIns = union(enum) {
         decoration: spv.SpvDecoration,
         extra_operand: spv.DecorationExtraOperand,
     },
+    execution_mode: struct {
+        entry_point: u32,
+        mode: spv.SpvExecutionMode,
+    },
     _unk: void,
 };
 
@@ -138,6 +142,14 @@ pub const SpirVOp = struct {
                         .id_target = self.operands.items[0],
                         .decoration = decoration,
                         .extra_operand = extra_op,
+                    },
+                };
+            },
+            .OpExecutionMode => {
+                return SpirVIns{
+                    .execution_mode = .{
+                        .entry_point = self.operands.items[0],
+                        .mode = @fromBackingInt(self.operands.items[1]),
                     },
                 };
             },
