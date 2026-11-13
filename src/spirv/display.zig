@@ -47,6 +47,9 @@ pub const DisplayCtx = struct {
             .function_end => {
                 try writer.print("OpFunctionEnd\n", .{});
             },
+            .store => |store| {
+                try writer.print("OpStore %{} %{}\n", .{ store.pointer, store.object });
+            },
             .decoration => |dec| {
                 try writer.print("OpDecorate %{} {s} ", .{ dec.id_target, @tagName(dec.decoration) });
 

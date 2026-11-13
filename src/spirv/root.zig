@@ -34,6 +34,10 @@ pub const SpirVIns = union(enum) {
         entry_point: u32,
         mode: spv.SpvExecutionMode,
     },
+    store: struct {
+        pointer: u32,
+        object: u32,
+    },
     _return: void,
     function_end: void,
     _unk: void,
@@ -139,6 +143,14 @@ pub const SpirVOp = struct {
 
                 return .{
                     .source_extension = raw[0..detect_spv_string_end(raw)],
+                };
+            },
+            .OpStore => {
+                return SpirVIns{
+                    .store = .{
+                        .pointer = self.operands.items[0],
+                        .object = self.operands.items[1],
+                    },
                 };
             },
             .OpName => {
