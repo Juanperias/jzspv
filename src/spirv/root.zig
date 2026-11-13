@@ -18,6 +18,13 @@ pub const SpirVIns = union(enum) {
         id_target: u32,
         name: []const u8,
     },
+    entry_point: struct {
+        execution_model: spv.SpvExecutionModel,
+        entry_point: u32,
+        name: []const u8,
+        interface_id_1: u32,
+        interface_id_2: u32,
+    },
     decoration: struct {
         id_target: u32,
         decoration: spv.SpvDecoration,
@@ -85,6 +92,22 @@ pub const SpirVOp = struct {
                     .ext_inst_import = .{
                         .result_id = id,
                         .name = raw[0..detect_spv_string_end(raw)],
+                    },
+                };
+            },
+            .OpEntryPoint => {
+                // WAIT!!!!!!!! MAGIC NUMBER DETECTED!!!!!!!!!!!!!!! THE 2 IS BECAUSE DE STRING STARTS AT POSITION 2
+                const name_len = 2 + detect_spv_string_end_operands(self.operands.items[2..]);
+                const name = std.mem.sliceAsBytes(self.operands.items[2..name_len]);
+
+                return SpirVIns{
+                    .entry_point = .{
+                        .execution_model = @fromBackingInt(self.operands.items[0]),
+                        .entry_point = self.operands.items[1],
+                        .name = name,
+                        // TODO NOTE: this code can be buggy
+                        .interface_id_1 = self.operands.items[name_len + 1],
+                        .interface_id_2 = self.operands.items[name_len + 2],
                     },
                 };
             },
@@ -264,7 +287,22 @@ pub const SpirVHeader = extern struct {
     }
 };
 
-// TODO: there must be a function that does this
+pub fn detect_spv_string_end_operands(spv_operands: []const u32) usize {
+    var end: usize = 0;
+
+    for (spv_operands) |spv_operand| {
+        const m: []const u8 = std.mem.asBytes(&spv_operand);
+
+        if (m[0] == 0 or m[1] == 0 or m[2] == 0 or m[3] == 0) {
+            break;
+        }
+
+        end += 1;
+    }
+
+    return end;
+}
+
 pub fn detect_spv_string_end(spv_str: []const u8) usize {
     var end: usize = 0;
 

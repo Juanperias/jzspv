@@ -572,6 +572,26 @@ pub const SpvBuiltIn = enum(u32) {
     ViewportMaskPerViewNV = 5262,
 };
 
+pub const SpvExecutionModel = enum(u32) {
+    Vertex = 0,
+    TessellationControl = 1,
+    TessellationEvaluation = 2,
+    Geometry = 3,
+    Fragment = 4,
+    GlCompute = 5,
+    Kernel = 6,
+    TaskNV = 5267,
+    MeshNV = 5268,
+    RayGenerationKHR = 5313,
+    IntersectionKHR = 5314,
+    AnyHitKHR = 5315,
+    ClosestHitKHR = 5316,
+    MissKHR = 5317,
+    CallableKHR = 5318,
+    TaskExt = 5364,
+    MeshExt = 5365,
+};
+
 pub const SpvExecutionMode = enum(u32) {
     Invocations = 0,
     SpacingEqual = 1,

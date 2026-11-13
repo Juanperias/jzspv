@@ -38,6 +38,9 @@ pub const DisplayCtx = struct {
             .execution_mode => |exe| {
                 try writer.print("OpExecutionMode %{} {s}\n", .{ exe.entry_point, @tagName(exe.mode) });
             },
+            .entry_point => |entry| {
+                try writer.print("OpEntryPoint {s} %{} \"{s}\" %{} %{}\n", .{ @tagName(entry.execution_model), entry.entry_point, entry.name, entry.interface_id_1, entry.interface_id_2 });
+            },
             .decoration => |dec| {
                 try writer.print("OpDecorate %{} {s} ", .{ dec.id_target, @tagName(dec.decoration) });
 
