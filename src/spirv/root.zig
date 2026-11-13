@@ -34,6 +34,8 @@ pub const SpirVIns = union(enum) {
         entry_point: u32,
         mode: spv.SpvExecutionMode,
     },
+    _return: void,
+    function_end: void,
     _unk: void,
 };
 
@@ -82,6 +84,16 @@ pub const SpirVOp = struct {
                         .addr = addr_model,
                         .mem = memory_model,
                     },
+                };
+            },
+            .OpFunctionEnd => {
+                return SpirVIns{
+                    .function_end = {},
+                };
+            },
+            .OpReturn => {
+                return SpirVIns{
+                    ._return = {},
                 };
             },
             .OpExtInstImport => {

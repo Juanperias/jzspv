@@ -41,6 +41,12 @@ pub const DisplayCtx = struct {
             .entry_point => |entry| {
                 try writer.print("OpEntryPoint {s} %{} \"{s}\" %{} %{}\n", .{ @tagName(entry.execution_model), entry.entry_point, entry.name, entry.interface_id_1, entry.interface_id_2 });
             },
+            ._return => {
+                try writer.print("OpReturn\n", .{});
+            },
+            .function_end => {
+                try writer.print("OpFunctionEnd\n", .{});
+            },
             .decoration => |dec| {
                 try writer.print("OpDecorate %{} {s} ", .{ dec.id_target, @tagName(dec.decoration) });
 
