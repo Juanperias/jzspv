@@ -366,6 +366,17 @@ pub const SpvMemoryModel = enum(u32) {
     Vulkan = 3,
 };
 
+pub const SpvFpEncoding = enum(u32) {
+    BFloat16KHR = 0,
+    Float8E4M3EXT = 4214,
+    Float8E5M2EXT = 4215,
+    Float6E2M3EXT = 4223,
+    Float6E3M2EXT = 4224,
+    Float4E2M1EXT = 4225,
+    Float8UnsignedE8M0EXT = 4226,
+    MXInt8EXT = 4227,
+};
+
 pub const SpvCapability = enum(u32) {
     Matrix = 0,
     Shader = 1,

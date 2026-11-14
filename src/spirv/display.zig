@@ -37,6 +37,15 @@ pub const DisplayCtx = struct {
 
                 try writer.print("\n", .{});
             },
+            .type_float => |ty_float| {
+                try writer.print("%{} = OpTypeFloat {}", .{ ty_float.result_id, ty_float.width });
+
+                if (ty_float.fp_enconding) |enc| {
+                    try writer.print(" {s}", .{@tagName(enc)});
+                }
+
+                try writer.print("\n", .{});
+            },
             .ext_inst_import => |ins_import| {
                 try writer.print("%{} = OpExtInstImport \"{s}\"\n", .{ ins_import.result_id, ins_import.name });
             },

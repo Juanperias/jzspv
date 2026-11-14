@@ -44,6 +44,11 @@ pub const SpirVIns = union(enum) {
         return_type: u32,
         parameters: []const u32,
     },
+    type_float: struct {
+        result_id: u32,
+        width: u32,
+        fp_enconding: ?spv.SpvFpEncoding,
+    },
     type_void: u32,
     _return: void,
     function_end: void,
@@ -84,16 +89,24 @@ pub const SpirVOp = struct {
                 };
             },
             .OpTypeFunction => {
-                var parameters: []const u32 = &[_]u32{};
-
-                if (self.operands.items.len > 1)
-                    parameters = self.operands.items[2..];
+                const parameters: []const u32 = if (self.operands.items.len > 2) self.operands.items[2..] else &[_]u32{};
 
                 return SpirVIns{
                     .type_function = .{
                         .result_id = self.operands.items[0],
                         .return_type = self.operands.items[1],
                         .parameters = parameters,
+                    },
+                };
+            },
+            .OpTypeFloat => {
+                const fp_enconding: ?spv.SpvFpEncoding = if (self.operands.items.len > 2) @fromBackingInt(self.operands.items[2]) else null;
+
+                return SpirVIns{
+                    .type_float = .{
+                        .result_id = self.operands.items[0],
+                        .width = self.operands.items[1],
+                        .fp_enconding = fp_enconding,
                     },
                 };
             },
