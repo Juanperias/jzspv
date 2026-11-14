@@ -23,6 +23,20 @@ pub const DisplayCtx = struct {
             .memory_model => |mem| {
                 try writer.print("OpMemoryModel {s} {s}\n", .{ @tagName(mem.addr), @tagName(mem.mem) });
             },
+            .label => |label| {
+                try writer.print("%{} = OpLabel\n", .{label});
+            },
+            .type_void => |v| {
+                try writer.print("%{} = OpTypeVoid\n", .{v});
+            },
+            .type_function => |f| {
+                try writer.print("%{} = OpTypeFunction %{}", .{ f.result_id, f.return_type });
+                for (f.parameters) |param| {
+                    try writer.print("%{} ", .{param});
+                }
+
+                try writer.print("\n", .{});
+            },
             .ext_inst_import => |ins_import| {
                 try writer.print("%{} = OpExtInstImport \"{s}\"\n", .{ ins_import.result_id, ins_import.name });
             },

@@ -38,6 +38,13 @@ pub const SpirVIns = union(enum) {
         pointer: u32,
         object: u32,
     },
+    label: u32,
+    type_function: struct {
+        result_id: u32,
+        return_type: u32,
+        parameters: []const u32,
+    },
+    type_void: u32,
     _return: void,
     function_end: void,
     _unk: void,
@@ -71,6 +78,31 @@ pub const SpirVOp = struct {
                     .capability = capability,
                 };
             },
+            .OpLabel => {
+                return SpirVIns{
+                    .label = self.operands.items[0],
+                };
+            },
+            .OpTypeFunction => {
+                var parameters: []const u32 = &[_]u32{};
+
+                if (self.operands.items.len > 1)
+                    parameters = self.operands.items[2..];
+
+                return SpirVIns{
+                    .type_function = .{
+                        .result_id = self.operands.items[0],
+                        .return_type = self.operands.items[1],
+                        .parameters = parameters,
+                    },
+                };
+            },
+            .OpTypeVoid => {
+                return SpirVIns{
+                    .type_void = self.operands.items[0],
+                };
+            },
+
             .OpMemoryModel => {
                 if (self.raw.wc() != 3) {
                     std.debug.print("Word Count Should be 3, but it is {}", .{self.raw.wc()});
