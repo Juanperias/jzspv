@@ -73,6 +73,9 @@ pub const DisplayCtx = struct {
             .store => |store| {
                 try writer.print("OpStore %{} %{}\n", .{ store.pointer, store.object });
             },
+            .type_vector => |vec| {
+                try writer.print("%{} = OpTypeVector %{} {}\n", .{ vec.result_id, vec.component_type, vec.component_count });
+            },
             .decoration => |dec| {
                 try writer.print("OpDecorate %{} {s} ", .{ dec.id_target, @tagName(dec.decoration) });
 
@@ -88,7 +91,9 @@ pub const DisplayCtx = struct {
 
                 try writer.print("\n", .{});
             },
-            else => {},
+            ._unk => |op| {
+                try writer.print("{s} is ??\n", .{@tagName(op)});
+            },
         }
     }
 

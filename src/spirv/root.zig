@@ -49,10 +49,15 @@ pub const SpirVIns = union(enum) {
         width: u32,
         fp_enconding: ?spv.SpvFpEncoding,
     },
+    type_vector: struct {
+        result_id: u32,
+        component_type: u32,
+        component_count: u32,
+    },
     type_void: u32,
     _return: void,
     function_end: void,
-    _unk: void,
+    _unk: spv.SpvOpCode,
 };
 
 pub const SpirVOp = struct {
@@ -86,6 +91,15 @@ pub const SpirVOp = struct {
             .OpLabel => {
                 return SpirVIns{
                     .label = self.operands.items[0],
+                };
+            },
+            .OpTypeVector => {
+                return SpirVIns{
+                    .type_vector = .{
+                        .result_id = self.operands.items[0],
+                        .component_type = self.operands.items[1],
+                        .component_count = self.operands.items[2],
+                    },
                 };
             },
             .OpTypeFunction => {
@@ -247,7 +261,7 @@ pub const SpirVOp = struct {
             },
             else => {
                 return .{
-                    ._unk = {},
+                    ._unk = self.raw.opcode(),
                 };
             },
         }
