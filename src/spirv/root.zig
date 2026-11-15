@@ -44,6 +44,11 @@ pub const SpirVIns = union(enum) {
         return_type: u32,
         parameters: []const u32,
     },
+    type_pointer: struct {
+        result_id: u32,
+        storage_class: spv.SpvStorageClass,
+        ty: u32,
+    },
     type_float: struct {
         result_id: u32,
         width: u32,
@@ -121,6 +126,15 @@ pub const SpirVOp = struct {
                         .result_id = self.operands.items[0],
                         .width = self.operands.items[1],
                         .fp_enconding = fp_enconding,
+                    },
+                };
+            },
+            .OpTypePointer => {
+                return SpirVIns{
+                    .type_pointer = .{
+                        .result_id = self.operands.items[0],
+                        .storage_class = @fromBackingInt(self.operands.items[1]),
+                        .ty = self.operands.items[2],
                     },
                 };
             },
