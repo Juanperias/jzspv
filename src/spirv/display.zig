@@ -29,6 +29,9 @@ pub const DisplayCtx = struct {
             .type_void => |v| {
                 try writer.print("%{} = OpTypeVoid\n", .{v});
             },
+            .function => |func| {
+                try writer.print("%{} = OpFunction %{} {s} %{}\n", .{ func.result_id, func.result_type, @tagName(func.function_control), func.function_type });
+            },
             .constant => |con| {
                 // TODO(Juanperias): Detect type of the literal value
                 try writer.print("%{} = OpConstant %{} {}\n", .{ con.result_id, con.result_type, con.val });

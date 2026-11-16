@@ -655,6 +655,15 @@ pub const SpvExecutionMode = enum(u32) {
     StencilRefReplacingEXT = 5027,
 };
 
+pub const SpvFunctionControl = enum(u32) {
+    None = 0,
+    Inline = 0x1,
+    DontInline = 0x2,
+    Pure = 0x4,
+    Const = 0x5,
+    OptNoneEXT = 0x10000,
+};
+
 pub const DecorationExtraOperand = union(enum) {
     literal: u32,
     build_in: SpvBuiltIn,

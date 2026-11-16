@@ -70,6 +70,12 @@ pub const SpirVIns = union(enum) {
         result_id: u32,
         val: u32,
     },
+    function: struct {
+        result_type: u32,
+        result_id: u32,
+        function_control: spv.SpvFunctionControl,
+        function_type: u32,
+    },
     type_void: u32,
     _return: void,
     function_end: void,
@@ -229,6 +235,16 @@ pub const SpirVOp = struct {
                         // TODO NOTE: this code can be buggy
                         .interface_id_1 = self.operands.items[name_len + 1],
                         .interface_id_2 = self.operands.items[name_len + 2],
+                    },
+                };
+            },
+            .OpFunction => {
+                return SpirVIns{
+                    .function = .{
+                        .result_type = self.operands.items[0],
+                        .result_id = self.operands.items[1],
+                        .function_control = @fromBackingInt(self.operands.items[2]),
+                        .function_type = self.operands.items[3],
                     },
                 };
             },
