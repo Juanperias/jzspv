@@ -29,6 +29,10 @@ pub const DisplayCtx = struct {
             .type_void => |v| {
                 try writer.print("%{} = OpTypeVoid\n", .{v});
             },
+            .constant => |con| {
+                // TODO(Juanperias): Detect type of the literal value
+                try writer.print("%{} = OpConstant %{} {}\n", .{ con.result_id, con.result_type, con.val });
+            },
             .type_function => |f| {
                 try writer.print("%{} = OpTypeFunction %{}", .{ f.result_id, f.return_type });
                 for (f.parameters) |param| {
@@ -42,6 +46,15 @@ pub const DisplayCtx = struct {
 
                 if (ty_float.fp_enconding) |enc| {
                     try writer.print(" {s}", .{@tagName(enc)});
+                }
+
+                try writer.print("\n", .{});
+            },
+            .variable => |variable| {
+                try writer.print("%{} = OpVariable %{} {s}", .{ variable.result_id, variable.result_type, @tagName(variable.storage_class) });
+
+                if (variable.init) |_init| {
+                    try writer.print(" {}", .{_init});
                 }
 
                 try writer.print("\n", .{});

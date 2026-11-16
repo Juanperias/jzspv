@@ -39,6 +39,12 @@ pub const SpirVIns = union(enum) {
         object: u32,
     },
     label: u32,
+    variable: struct {
+        result_type: u32,
+        result_id: u32,
+        storage_class: spv.SpvStorageClass,
+        init: ?u32,
+    },
     type_function: struct {
         result_id: u32,
         return_type: u32,
@@ -58,6 +64,11 @@ pub const SpirVIns = union(enum) {
         result_id: u32,
         component_type: u32,
         component_count: u32,
+    },
+    constant: struct {
+        result_type: u32,
+        result_id: u32,
+        val: u32,
     },
     type_void: u32,
     _return: void,
@@ -107,6 +118,15 @@ pub const SpirVOp = struct {
                     },
                 };
             },
+            .OpConstant => {
+                return SpirVIns{
+                    .constant = .{
+                        .result_type = self.operands.items[0],
+                        .result_id = self.operands.items[1],
+                        .val = self.operands.items[2],
+                    },
+                };
+            },
             .OpTypeFunction => {
                 const parameters: []const u32 = if (self.operands.items.len > 2) self.operands.items[2..] else &[_]u32{};
 
@@ -126,6 +146,18 @@ pub const SpirVOp = struct {
                         .result_id = self.operands.items[0],
                         .width = self.operands.items[1],
                         .fp_enconding = fp_enconding,
+                    },
+                };
+            },
+            .OpVariable => {
+                const init: ?u32 = if (self.operands.items.len > 3) self.operands.items[3] else null;
+
+                return SpirVIns{
+                    .variable = .{
+                        .result_type = self.operands.items[0],
+                        .result_id = self.operands.items[1],
+                        .storage_class = @fromBackingInt(self.operands.items[2]),
+                        .init = init,
                     },
                 };
             },
