@@ -38,6 +38,11 @@ pub const SpirVIns = union(enum) {
         pointer: u32,
         object: u32,
     },
+    load: struct {
+        result_type: u32,
+        result_id: u32,
+        pointer: u32,
+    },
     label: u32,
     variable: struct {
         result_type: u32,
@@ -130,6 +135,15 @@ pub const SpirVOp = struct {
                         .result_type = self.operands.items[0],
                         .result_id = self.operands.items[1],
                         .val = self.operands.items[2],
+                    },
+                };
+            },
+            .OpLoad => {
+                return SpirVIns{
+                    .load = .{
+                        .result_type = self.operands.items[0],
+                        .result_id = self.operands.items[1],
+                        .pointer = self.operands.items[2],
                     },
                 };
             },

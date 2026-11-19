@@ -36,6 +36,9 @@ pub const DisplayCtx = struct {
                 // TODO(Juanperias): Detect type of the literal value
                 try writer.print("%{} = OpConstant %{} {}\n", .{ con.result_id, con.result_type, con.val });
             },
+            .load => |l| {
+                try writer.print("%{} = OpLoad %{} %{}\n", .{ l.result_id, l.result_type, l.pointer });
+            },
             .type_function => |f| {
                 try writer.print("%{} = OpTypeFunction %{}", .{ f.result_id, f.return_type });
                 for (f.parameters) |param| {
