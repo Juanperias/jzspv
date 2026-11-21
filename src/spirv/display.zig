@@ -36,6 +36,15 @@ pub const DisplayCtx = struct {
                 // TODO(Juanperias): Detect type of the literal value
                 try writer.print("%{} = OpConstant %{} {}\n", .{ con.result_id, con.result_type, con.val });
             },
+            .composite_construct => |composite| {
+                try writer.print("%{} = OpCompositeConstruct %{}", .{ composite.result_id, composite.result_type });
+
+                for (composite.constituents) |constituent| {
+                    try writer.print(" %{}", .{constituent});
+                }
+
+                try writer.print("\n", .{});
+            },
             .load => |l| {
                 try writer.print("%{} = OpLoad %{} %{}\n", .{ l.result_id, l.result_type, l.pointer });
             },
@@ -43,6 +52,15 @@ pub const DisplayCtx = struct {
                 try writer.print("%{} = OpTypeFunction %{}", .{ f.result_id, f.return_type });
                 for (f.parameters) |param| {
                     try writer.print("%{} ", .{param});
+                }
+
+                try writer.print("\n", .{});
+            },
+            .composite_extract => |composite| {
+                try writer.print("%{} = OpCompositeExtract %{} %{}", .{ composite.result_id, composite.result_type, composite.composite });
+
+                for (composite.indexes) |index| {
+                    try writer.print(" {}", .{index});
                 }
 
                 try writer.print("\n", .{});

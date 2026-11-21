@@ -81,6 +81,18 @@ pub const SpirVIns = union(enum) {
         function_control: spv.SpvFunctionControl,
         function_type: u32,
     },
+    composite_extract: struct {
+        result_type: u32,
+        result_id: u32,
+        composite: u32,
+        // NOTE(JUANPERAS): Well.... The spec says that this is variable
+        indexes: []const u32,
+    },
+    composite_construct: struct {
+        result_type: u32,
+        result_id: u32,
+        constituents: []const u32,
+    },
     type_void: u32,
     _return: void,
     function_end: void,
@@ -166,6 +178,25 @@ pub const SpirVOp = struct {
                         .result_id = self.operands.items[0],
                         .width = self.operands.items[1],
                         .fp_enconding = fp_enconding,
+                    },
+                };
+            },
+            .OpCompositeConstruct => {
+                const constituents: []const u32 = if (self.operands.items.len > 2) self.operands.items[2..] else &.{};
+
+                return SpirVIns{
+                    .composite_construct = .{ .result_type = self.operands.items[0], .result_id = self.operands.items[1], .constituents = constituents },
+                };
+            },
+            .OpCompositeExtract => {
+                const indexes: []const u32 = if (self.operands.items.len > 3) self.operands.items[3..] else &.{};
+
+                return SpirVIns{
+                    .composite_extract = .{
+                        .result_type = self.operands.items[0],
+                        .result_id = self.operands.items[1],
+                        .composite = self.operands.items[2],
+                        .indexes = indexes,
                     },
                 };
             },
