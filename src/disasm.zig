@@ -9,13 +9,23 @@ pub fn main(init: std.process.Init) !void {
     var stdout_writer = std.Io.File.writer(stdout, init.io, &buffer);
     const output = &stdout_writer.interface;
 
-    const file = try std.Io.Dir.cwd().openFile(init.io, "../shader.frag.spv", .{});
+    const min = init.minimal;
+    const allocator = init.arena.allocator();
+
+    const args = try min.args.toSlice(allocator);
+
+    if (args.len < 2) {
+        std.debug.print("Expected SPIR-V file\n", .{});
+        std.process.exit(1);
+    }
+
+    const file = try std.Io.Dir.cwd().openFile(init.io, args[1], .{});
     defer file.close(init.io);
 
     const len = try file.length(init.io);
 
     if ((len & 3) != 0) {
-        std.debug.print("Invalid SPIR-V File!", .{});
+        std.debug.print("Invalid SPIR-V File!\n", .{});
         std.process.exit(1);
     }
 
@@ -32,15 +42,13 @@ pub fn main(init: std.process.Init) !void {
     try output.flush();
 
     if (!header.is_valid()) {
-        std.debug.print("Invalid SPIR-V File!", .{});
+        std.debug.print("Invalid SPIR-V File!\n", .{});
         std.process.exit(1);
     }
 
     var raw_op: spirv.RawSpirVOp = undefined;
 
     var offset: u64 = @sizeOf(spirv.SpirVHeader);
-
-    const allocator = init.arena.allocator();
 
     var display_ctx = spirv.display.DisplayCtx.init(allocator);
     defer display_ctx.deinit();
