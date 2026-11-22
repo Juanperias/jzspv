@@ -12,6 +12,7 @@ pub const SpirVIns = union(enum) {
         result_id: u32,
         name: []const u8,
     },
+    extension: []const u8,
     source: struct { source_lang: spv.SpvSourceLanguage, version: u32 },
     source_extension: []const u8,
     name: struct {
@@ -266,6 +267,11 @@ pub const SpirVOp = struct {
                         .name = raw[0..detect_spv_string_end(raw)],
                     },
                 };
+            },
+            .OpExtension => {
+                const raw = std.mem.sliceAsBytes(self.operands.items[0..]);
+
+                return SpirVIns{ .extension = raw[0..detect_spv_string_end(raw)] };
             },
             .OpEntryPoint => {
                 // WAIT!!!!!!!! MAGIC NUMBER DETECTED!!!!!!!!!!!!!!! THE 2 IS BECAUSE DE STRING STARTS AT POSITION 2

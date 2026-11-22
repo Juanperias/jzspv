@@ -74,11 +74,14 @@ pub const DisplayCtx = struct {
 
                 try writer.print("\n", .{});
             },
+            .extension => |name| {
+                try writer.print("OpExtension \"{s}\"\n", .{name});
+            },
             .variable => |variable| {
                 try writer.print("%{} = OpVariable %{} {s}", .{ variable.result_id, variable.result_type, @tagName(variable.storage_class) });
 
                 if (variable.init) |_init| {
-                    try writer.print(" {}", .{_init});
+                    try writer.print(" %{}", .{_init});
                 }
 
                 try writer.print("\n", .{});
