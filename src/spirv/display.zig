@@ -107,6 +107,9 @@ pub const DisplayCtx = struct {
             ._return => {
                 try writer.print("OpReturn\n", .{});
             },
+            .type_int => |int| {
+                try writer.print("%{} = OpTypeInt {} {}", .{ int.result_id, int.width, int.signedness });
+            },
             .type_pointer => |ptr| {
                 try writer.print("%{} = OpTypePointer {s} %{}\n", .{ ptr.result_id, @tagName(ptr.storage_class), ptr.ty });
             },

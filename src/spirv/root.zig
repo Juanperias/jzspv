@@ -57,6 +57,11 @@ pub const SpirVIns = union(enum) {
         return_type: u32,
         parameters: []const u32,
     },
+    type_int: struct {
+        result_id: u32,
+        width: u32,
+        signedness: u32,
+    },
     type_pointer: struct {
         result_id: u32,
         storage_class: spv.SpvStorageClass,
@@ -213,13 +218,23 @@ pub const SpirVOp = struct {
                         .init = init,
                     },
                 };
-            },
+            }
+            
             .OpTypePointer => {
                 return SpirVIns{
                     .type_pointer = .{
                         .result_id = self.operands.items[0],
                         .storage_class = @fromBackingInt(self.operands.items[1]),
                         .ty = self.operands.items[2],
+                    },
+                };
+            },
+            .OpTypeInt => {
+                return SpirVIns{
+                    .type_int = .{
+                        .result_id = self.operands.items[0],
+                        .width = self.operands.items[1],
+                        .signedness = self.operands.items[2],
                     },
                 };
             },
@@ -381,7 +396,7 @@ pub const RawSpirVOp = extern struct {
     }
 
     pub fn opcode(self: *const RawSpirVOp) spv.SpvOpCode {
-        return @fromBackingInt(@intCast(self.op & 0xffff));
+       return @fromBackingInt(@intCast(self.op & 0xffff));
     }
 };
 
