@@ -218,8 +218,8 @@ pub const SpirVOp = struct {
                         .init = init,
                     },
                 };
-            }
-            
+            },
+
             .OpTypePointer => {
                 return SpirVIns{
                     .type_pointer = .{
@@ -396,7 +396,7 @@ pub const RawSpirVOp = extern struct {
     }
 
     pub fn opcode(self: *const RawSpirVOp) spv.SpvOpCode {
-       return @fromBackingInt(@intCast(self.op & 0xffff));
+        return @fromBackingInt(@intCast(self.op & 0xffff));
     }
 };
 
