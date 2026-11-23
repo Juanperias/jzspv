@@ -119,15 +119,30 @@ pub const DisplayCtx = struct {
             .type_vector => |vec| {
                 try writer.print("%{} = OpTypeVector %{} {}\n", .{ vec.result_id, vec.component_type, vec.component_count });
             },
-            .decoration => |dec| {
-                try writer.print("OpDecorate %{} {s} ", .{ dec.id_target, @tagName(dec.decoration) });
+            .member_decorate => |dec| {
+                try writer.print("OpMemberDecorate %{} {} {s}", .{ dec.structure_type, dec.member, @tagName(dec.decoration) });
 
                 switch (dec.extra_operand) {
                     .literal => |lit| {
-                        try writer.print("{}", .{lit});
+                        try writer.print(" {}", .{lit});
                     },
                     .build_in => |b| {
-                        try writer.print("{s}", .{@tagName(b)});
+                        try writer.print(" {s}", .{@tagName(b)});
+                    },
+                    else => {},
+                }
+
+                try writer.print("\n", .{});
+            },
+            .decoration => |dec| {
+                try writer.print("OpDecorate %{} {s}", .{ dec.id_target, @tagName(dec.decoration) });
+
+                switch (dec.extra_operand) {
+                    .literal => |lit| {
+                        try writer.print(" {}", .{lit});
+                    },
+                    .build_in => |b| {
+                        try writer.print(" {s}", .{@tagName(b)});
                     },
                     else => {},
                 }

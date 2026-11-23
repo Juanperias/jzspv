@@ -31,6 +31,7 @@ pub const SpirVIns = union(enum) {
         decoration: spv.SpvDecoration,
         extra_operand: spv.DecorationExtraOperand,
     },
+    member_decorate: struct { structure_type: u32, member: u32, decoration: spv.SpvDecoration, extra_operand: spv.DecorationExtraOperand },
     execution_mode: struct {
         entry_point: u32,
         mode: spv.SpvExecutionMode,
@@ -332,35 +333,22 @@ pub const SpirVOp = struct {
                     .name = .{ .id_target = self.operands.items[0], .name = raw[0..detect_spv_string_end(raw)] },
                 };
             },
+            .OpMemberDecorate => {
+                const decoration: spv.SpvDecoration = @fromBackingInt(self.operands.items[2]);
+
+                return SpirVIns{
+                    .member_decorate = .{ .structure_type = self.operands.items[0], .member = self.operands.items[1], .decoration = decoration, .extra_operand = get_extra_operand(decoration, self.operands.items, 3) },
+                };
+            },
             .OpDecorate => {
                 // NOTE: This behavior is used in other op so this should be in a function or something like that
-
                 const decoration: spv.SpvDecoration = @fromBackingInt(self.operands.items[1]);
-                var extra_op: spv.DecorationExtraOperand = undefined;
-
-                switch (decoration) {
-                    .BuiltIn => {
-                        extra_op = spv.DecorationExtraOperand{
-                            .build_in = @fromBackingInt(self.operands.items[2]),
-                        };
-                    },
-                    .SpecId, .ArrayStride, .MatrixStride, .UniformId, .Stream, .Location, .Component, .Index, .Binding, .DescriptorSet, .Offset, .XfbBuffer, .XfbStride => {
-                        extra_op = spv.DecorationExtraOperand{
-                            .literal = self.operands.items[2],
-                        };
-                    },
-                    else => {
-                        extra_op = spv.DecorationExtraOperand{
-                            .none = {},
-                        };
-                    },
-                }
 
                 return .{
                     .decoration = .{
                         .id_target = self.operands.items[0],
                         .decoration = decoration,
-                        .extra_operand = extra_op,
+                        .extra_operand = get_extra_operand(decoration, self.operands.items, 2),
                     },
                 };
             },
@@ -497,6 +485,30 @@ pub fn detect_spv_string_end_operands(spv_operands: []const u32) usize {
     }
 
     return end;
+}
+
+pub fn get_extra_operand(decoration: spv.SpvDecoration, operands: []u32, offset: usize) spv.DecorationExtraOperand {
+    var extra_op: spv.DecorationExtraOperand = undefined;
+
+    switch (decoration) {
+        .BuiltIn => {
+            extra_op = spv.DecorationExtraOperand{
+                .build_in = @fromBackingInt(operands[offset]),
+            };
+        },
+        .SpecId, .ArrayStride, .MatrixStride, .UniformId, .Stream, .Location, .Component, .Index, .Binding, .DescriptorSet, .Offset, .XfbBuffer, .XfbStride => {
+            extra_op = spv.DecorationExtraOperand{
+                .literal = operands[offset],
+            };
+        },
+        else => {
+            extra_op = spv.DecorationExtraOperand{
+                .none = {},
+            };
+        },
+    }
+
+    return extra_op;
 }
 
 pub fn detect_spv_string_end(spv_str: []const u8) usize {
