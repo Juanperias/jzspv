@@ -101,6 +101,14 @@ pub const SpirVIns = union(enum) {
         constituents: []const u32,
     },
     type_void: u32,
+    type_bool: u32,
+    branch: u32,
+    loop_merge: struct {
+        merge_block: u32,
+        continue_target: u32,
+        loop_control: spv.SpvLoopControl,
+        loop_control_params: []const u32,
+    },
     _return: void,
     function_end: void,
     _unk: spv.SpvOpCode,
@@ -241,6 +249,31 @@ pub const SpirVOp = struct {
             .OpTypeVoid => {
                 return SpirVIns{
                     .type_void = self.operands.items[0],
+                };
+            },
+
+            .OpTypeBool => {
+                return SpirVIns{
+                    .type_bool = self.operands.items[0],
+                };
+            },
+
+            .OpBranch => {
+                return SpirVIns{
+                    .branch = self.operands.items[0],
+                };
+            },
+
+            .OpLoopMerge => {
+                const params: []const u32 = if (self.operands.items.len > 3) self.operands.items[3..] else &.{};
+
+                return SpirVIns{
+                    .loop_merge = .{
+                        .merge_block = self.operands.items[0],
+                        .continue_target = self.operands.items[1],
+                        .loop_control = @fromBackingInt(self.operands.items[2]),
+                        .loop_control_params = params,
+                    },
                 };
             },
 

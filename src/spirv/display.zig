@@ -29,6 +29,21 @@ pub const DisplayCtx = struct {
             .type_void => |v| {
                 try writer.print("%{} = OpTypeVoid\n", .{v});
             },
+            .type_bool => |v| {
+                try writer.print("%{} = OpTypeBool\n", .{v});
+            },
+            .branch => |target| {
+                try writer.print("OpBranch %{}\n", .{target});
+            },
+            .loop_merge => |lm| {
+                try writer.print("OpLoopMerge %{} %{} {s}", .{ lm.merge_block, lm.continue_target, @tagName(lm.loop_control) });
+
+                for (lm.loop_control_params) |param| {
+                    try writer.print(" {}", .{param});
+                }
+
+                try writer.print("\n", .{});
+            },
             .function => |func| {
                 try writer.print("%{} = OpFunction %{} {s} %{}\n", .{ func.result_id, func.result_type, @tagName(func.function_control), func.function_type });
             },

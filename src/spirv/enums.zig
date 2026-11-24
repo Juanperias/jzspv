@@ -664,6 +664,30 @@ pub const SpvFunctionControl = enum(u32) {
     OptNoneEXT = 0x10000,
 };
 
+pub const SpvLoopControl = enum(u32) {
+    None                     = 0x0,
+    Unroll                   = 0x1,
+    DontUnroll               = 0x2,
+    DependencyInfinite       = 0x4,
+    DependencyLength         = 0x8,
+    MinIterations            = 0x10,
+    MaxIterations            = 0x20,
+    IterationMultiple        = 0x40,
+    PeelCount                = 0x80,
+    PartialCount             = 0x100,
+    InitiationIntervalALTERA = 0x10000,
+    MaxConcurrencyALTERA     = 0x20000,
+    DependencyArrayALTERA    = 0x40000,
+    PipelineEnableALTERA     = 0x80000,
+    LoopCoalesceALTERA       = 0x100000,
+    MaxInterleavingALTERA    = 0x200000,
+    SpeculatedIterationsALTERA = 0x400000,
+    NoFusionALTERA           = 0x800000,
+    LoopCountALTERA          = 0x1000000,
+    MaxReinvocationDelayALTERA = 0x2000000,
+    MultipleWaitQueuesQCOM   = 0x10000000,
+};
+
 pub const DecorationExtraOperand = union(enum) {
     literal: u32,
     build_in: SpvBuiltIn,
