@@ -103,6 +103,12 @@ pub const SpirVIns = union(enum) {
     type_void: u32,
     type_bool: u32,
     branch: u32,
+    access_chain: struct {
+        result_type: u32,
+        result_id: u32,
+        base: u32,
+        indexes: []const u32,
+    },
     loop_merge: struct {
         merge_block: u32,
         continue_target: u32,
@@ -261,6 +267,19 @@ pub const SpirVOp = struct {
             .OpBranch => {
                 return SpirVIns{
                     .branch = self.operands.items[0],
+                };
+            },
+
+            .OpAccessChain => {
+                const indexes: []const u32 = if (self.operands.items.len > 3) self.operands.items[3..] else &.{};
+
+                return SpirVIns{
+                    .access_chain = .{
+                        .result_type = self.operands.items[0],
+                        .result_id   = self.operands.items[1],
+                        .base        = self.operands.items[2],
+                        .indexes     = indexes,
+                    },
                 };
             },
 
