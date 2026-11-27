@@ -26,6 +26,9 @@ pub const DisplayCtx = struct {
             .label => |label| {
                 try writer.print("%{} = OpLabel\n", .{label});
             },
+            .ford_less_than => |ford_less| {
+                try writer.print("%{} = OpFOrdLessThan %{} %{} %{}", .{ ford_less.result_id, ford_less.result_type, ford_less.operand_1, ford_less.operand_2 });
+            },
             .type_void => |v| {
                 try writer.print("%{} = OpTypeVoid\n", .{v});
             },
@@ -59,6 +62,15 @@ pub const DisplayCtx = struct {
             .constant => |con| {
                 // TODO(Juanperias): Detect type of the literal value
                 try writer.print("%{} = OpConstant %{} {}\n", .{ con.result_id, con.result_type, con.val });
+            },
+            .branch_conditional => |cond| {
+                try writer.print("OpBranchConditional %{} %{} %{}", .{ cond.condition, cond.true_label, cond.false_label });
+
+                for (cond.branch_weights) |weights| {
+                    try writer.print(" {}", .{weights});
+                }
+
+                try writer.print("\n", .{});
             },
             .composite_construct => |composite| {
                 try writer.print("%{} = OpCompositeConstruct %{}", .{ composite.result_id, composite.result_type });

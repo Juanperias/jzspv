@@ -95,6 +95,12 @@ pub const SpirVIns = union(enum) {
         // NOTE(JUANPERAS): Well.... The spec says that this is variable
         indexes: []const u32,
     },
+    branch_conditional: struct {
+        condition: u32,
+        true_label: u32,
+        false_label: u32,
+        branch_weights: []const u32,
+    },
     composite_construct: struct {
         result_type: u32,
         result_id: u32,
@@ -108,6 +114,12 @@ pub const SpirVIns = union(enum) {
         result_id: u32,
         base: u32,
         indexes: []const u32,
+    },
+    ford_less_than: struct {
+        result_type: u32,
+        result_id: u32,
+        operand_1: u32,
+        operand_2: u32,
     },
     loop_merge: struct {
         merge_block: u32,
@@ -209,6 +221,28 @@ pub const SpirVOp = struct {
                     .composite_construct = .{ .result_type = self.operands.items[0], .result_id = self.operands.items[1], .constituents = constituents },
                 };
             },
+            .OpBranchConditional => {
+                const weights: []const u32 = if (self.operands.items.len > 3) self.operands.items[3..] else &.{};
+
+                return SpirVIns{
+                    .branch_conditional = .{
+                        .condition = self.operands.items[0],
+                        .true_label = self.operands.items[1],
+                        .false_label = self.operands.items[2],
+                        .branch_weights = weights,
+                    },
+                };
+            },
+            .OpFOrdLessThan => {
+                return SpirVIns{
+                    .ford_less_than = .{
+                        .result_type = self.operands.items[0],
+                        .result_id = self.operands.items[1],
+                        .operand_1 = self.operands.items[2],
+                        .operand_2 = self.operands.items[3],
+                    },
+                };
+            },
             .OpCompositeExtract => {
                 const indexes: []const u32 = if (self.operands.items.len > 3) self.operands.items[3..] else &.{};
 
@@ -276,9 +310,9 @@ pub const SpirVOp = struct {
                 return SpirVIns{
                     .access_chain = .{
                         .result_type = self.operands.items[0],
-                        .result_id   = self.operands.items[1],
-                        .base        = self.operands.items[2],
-                        .indexes     = indexes,
+                        .result_id = self.operands.items[1],
+                        .base = self.operands.items[2],
+                        .indexes = indexes,
                     },
                 };
             },
