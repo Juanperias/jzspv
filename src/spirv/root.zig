@@ -107,6 +107,16 @@ pub const SpirVOp = struct {
                     },
                 };
             },
+            .OpTypeStruct => {
+                const members: []const u32 = if (self.operands.items.len > 1) self.operands.items[1..] else &.{};
+
+                return SpirVIns{
+                    .type_struct = .{
+                        .result_id = self.operands.items[0],
+                        .members = members,
+                    },
+                };
+            },
             .OpFOrdLessThan => {
                 return SpirVIns{
                     .ford_less_than = .{
@@ -240,6 +250,17 @@ pub const SpirVOp = struct {
                 return .{
                     .ext_inst_import = .{
                         .result_id = id,
+                        .name = raw[0..detect_spv_string_end(raw)],
+                    },
+                };
+            },
+            .OpMemberName => {
+                const raw = std.mem.sliceAsBytes(self.operands.items[2..]);
+
+                return SpirVIns{
+                    .member_name = .{
+                        .type = self.operands.items[0],
+                        .member = self.operands.items[1],
                         .name = raw[0..detect_spv_string_end(raw)],
                     },
                 };

@@ -38,6 +38,15 @@ pub const DisplayCtx = struct {
             .branch => |target| {
                 try writer.print("OpBranch %{}\n", .{target});
             },
+            .type_struct => |ty_struct| {
+                try writer.print("%{} = OpTypeStruct", .{ty_struct.result_id});
+
+                for (ty_struct.members) |member| {
+                    try writer.print(" %{}", .{member});
+                }
+
+                try writer.print("\n", .{});
+            },
             .access_chain => |ac| {
                 try writer.print("%{} = OpAccessChain %{} %{}", .{ ac.result_id, ac.result_type, ac.base });
 
@@ -46,6 +55,9 @@ pub const DisplayCtx = struct {
                 }
 
                 try writer.print("\n", .{});
+            },
+            .member_name => |member| {
+                try writer.print("OpMemberName %{} {} \"{s}\"\n", .{ member.type, member.member, member.name });
             },
             .loop_merge => |lm| {
                 try writer.print("OpLoopMerge %{} %{} {s}", .{ lm.merge_block, lm.continue_target, @tagName(lm.loop_control) });

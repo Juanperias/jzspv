@@ -47,6 +47,15 @@ pub const SpirVIns = union(enum) {
         storage_class: spv.SpvStorageClass,
         init: ?u32,
     },
+    type_struct: struct {
+        result_id: u32,
+        members: []const u32,
+    },
+    member_name: struct {
+        type: u32,
+        member: u32,
+        name: []const u8,
+    },
     type_function: struct {
         result_id: u32,
         return_type: u32,
